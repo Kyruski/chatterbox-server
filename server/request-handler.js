@@ -1,5 +1,4 @@
 const http = require('http');
-const { parse } = require('querystring');
 const messages = [];
 /*************************************************************
  
@@ -38,16 +37,8 @@ var requestHandler = function(request, response) {
   // console.logs in your code.
   // console.log('request is: ', request);
   //const url = 'http://parse.atx.hackreactor.com/chatterbox/classes/messages'
-  
-  const options = {
-    host: 'localhost',
-    port: 3000,
-    path: request.url
-  };
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
-
-  
   var statusCode = 200;
   
   // See the note below about CORS headers.
@@ -62,31 +53,25 @@ var requestHandler = function(request, response) {
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   // response.writeHead(statusCode, headers);
-
-  const { method, url } = request;
   let body = [];
-  const results = [];
-  if (options.path !== '/classes/messages' && options.path !== '/') {
+  if (request.url !== '/classes/messages' && request.url !== '/') {
     statusCode = 404;
   }
   if (request.method === 'GET') {
-    if (options.path === '/classes/messages') {
+    if (request.url === '/classes/messages') {
       statusCode = 200;
     }
-    results.push(...messages);
-
     response.writeHead(statusCode, 'Content-Type', 'application/json');
-    const responseBody = {results}; //{ headers, method, url, results, statusCode};
-    response.end(JSON.stringify(responseBody));
+    response.end(JSON.stringify({results: messages}));
   } else if (request.method === 'POST') {
-    if (options.path === '/classes/messages') {
+    if (request.url === '/classes/messages') {
       statusCode = 201;
     }
     request.on('data', chunk => {
       body += chunk;
-      messages.push(JSON.parse(body));
     });
     request.on('end', () => {
+      messages.push(JSON.parse(body));
       response.writeHead(statusCode, {'Content-Type': 'application/json'});
       response.end(body);
     });
