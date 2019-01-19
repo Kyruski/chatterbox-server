@@ -48,10 +48,10 @@ var requestHandler = function(request, response) {
   // The outgoing status.
 
   
-  var statusCode = 200; // maybe response.statusCode; //This is good now
+  var statusCode = 200;
   
   // See the note below about CORS headers.
-  // var headers = defaultCorsHeaders;   LOOK HERERERERERER
+  var headers = defaultCorsHeaders;
   
   // Tell the client we are sending them plain text.
   //
@@ -63,33 +63,21 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   // response.writeHead(statusCode, headers);
 
-  const { headers, method, url } = request;
+  const { method, url } = request;
   let body = [];
-  let results = [];
-  // if (request.url === '/') {
-  //   response.end('Hello, World!');
-  // } else {
-  if (options.path !== '/classes/messages') {
+  const results = [];
+  if (options.path !== '/classes/messages' && options.path !== '/') {
     statusCode = 404;
   }
   if (request.method === 'GET') {
-    request.on('error', (err) => {
-      console.error(err);
-    }).on('data', (chunk) => {
-      body.push(chunk);
-    }).on('end', () => {
-      body = JSON.stringify(Buffer.concat(body));
-      response.on('error', (err) => {
-        console.error(err);
-      });
-      // response.statusCode = 200;
-      // response.setHeader('Content-Type', 'application/json');
-      response.writeHead(statusCode, {'Content-Type': 'application/json'});
-      results = messages;
-      const responseBody = { headers, method, url, body, results};
-      response.write(JSON.stringify(responseBody));
-      response.end();
-    });
+    if (options.path === '/classes/messages') {
+      statusCode = 200;
+    }
+    results.push(...messages);
+
+    response.writeHead(statusCode, 'Content-Type', 'application/json');
+    const responseBody = {results}; //{ headers, method, url, results, statusCode};
+    response.end(JSON.stringify(responseBody));
   } else if (request.method === 'POST') {
     if (options.path === '/classes/messages') {
       statusCode = 201;
@@ -100,7 +88,6 @@ var requestHandler = function(request, response) {
     });
     request.on('end', () => {
       response.writeHead(statusCode, {'Content-Type': 'application/json'});
-      console.log(parse(body));
       response.end(body);
     });
   }
