@@ -1,8 +1,9 @@
 /* Import node's http module: */
-var http = require('http');
-const {requestHandler} = require('./request-handler.js');
+const http             = require('http'),
+      url              = require('url'),
+      {requestHandler} = require('./request-handler.js');
 
-
+let url_pathname = url.parse('chatterbox/classes/messages');
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
 // normally already claimed by another server and/or not accessible
@@ -24,8 +25,8 @@ var ip = '127.0.0.1';
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
 var server = http.createServer(requestHandler);
-console.log('Listening on http://' + ip + ':' + port);
-server.listen(port, ip);
+console.log('Listening on http://' + ip + ':' + port + '/' + url_pathname.path);
+server.listen(port);
 
 // To start this server, run:
 //

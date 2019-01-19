@@ -1,3 +1,6 @@
+const http = require('http');
+const { parse } = require('querystring');
+
 /*************************************************************
  
  You should implement your request handler function in this file.
@@ -34,23 +37,69 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // console.log('request is: ', request);
+  //const url = 'http://parse.atx.hackreactor.com/chatterbox/classes/messages'
+  
+  const options = {
+    host: 'localhost',
+    port: 3000,
+    path: request.url
+  };
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
-  var statusCode = response.statusCode; //This is good now
 
+  
+  var statusCode = 200; // maybe response.statusCode; //This is good now
+  
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
-
+  // var headers = defaultCorsHeaders;   LOOK HERERERERERER
+  
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/JSON';
-
+  // headers['Content-Type'] = 'text/plain';   LOOK HERERERERERER
+  
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
+  const { headers, method, url } = request;
+  let body = [];
+  const results = [];
+  // if (request.url === '/') {
+  //   response.end('Hello, World!');
+  // } else {
+  if (options.path !== '/classes/messages') {
+    statusCode = 404;
+  }
+  if (request.method === 'GET') {
+    request.on('error', (err) => {
+      console.error(err);
+    }).on('data', (chunk) => {
+      body.push(chunk);
+    }).on('end', () => {
+      body = JSON.stringify(Buffer.concat(body));
+      response.on('error', (err) => {
+        console.error(err);
+      });
+      // response.statusCode = 200;
+      // response.setHeader('Content-Type', 'application/json');
+      response.writeHead(statusCode, {'Content-Type': 'application/json'});
+
+      const responseBody = { headers, method, url, body, results};
+      response.write(JSON.stringify(responseBody));
+      response.end();
+    });
+  } else if (request.method === 'POST') {
+    request.on('data', chunk => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      console.log(parse(body));
+      response.end(body);
+    })
+  }
+  
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
@@ -58,7 +107,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  // response.end('Hello, World!');
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
