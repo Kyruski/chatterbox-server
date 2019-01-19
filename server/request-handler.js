@@ -1,6 +1,6 @@
 const http = require('http');
 const { parse } = require('querystring');
-
+const messages = [];
 /*************************************************************
  
  You should implement your request handler function in this file.
@@ -65,7 +65,7 @@ var requestHandler = function(request, response) {
 
   const { headers, method, url } = request;
   let body = [];
-  const results = [];
+  let results = [];
   // if (request.url === '/') {
   //   response.end('Hello, World!');
   // } else {
@@ -85,19 +85,24 @@ var requestHandler = function(request, response) {
       // response.statusCode = 200;
       // response.setHeader('Content-Type', 'application/json');
       response.writeHead(statusCode, {'Content-Type': 'application/json'});
-
+      results = messages;
       const responseBody = { headers, method, url, body, results};
       response.write(JSON.stringify(responseBody));
       response.end();
     });
   } else if (request.method === 'POST') {
+    if (options.path === '/classes/messages') {
+      statusCode = 201;
+    }
     request.on('data', chunk => {
       body += chunk;
+      messages.push(JSON.parse(body));
     });
     request.on('end', () => {
+      response.writeHead(statusCode, {'Content-Type': 'application/json'});
       console.log(parse(body));
       response.end(body);
-    })
+    });
   }
   
   // Make sure to always call response.end() - Node may not send
